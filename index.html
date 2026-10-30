@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>Selección histórica de grabaciones acústicas (2024–2025) | Fundación Jocotoco</title><meta content="Reconstrucción breve de los criterios usados para preparar audios destinados a identificación taxonómica experta (2024–2025)." name="description"/><link href="assets/papiro.css" rel="stylesheet"/><script defer="True" src="assets/mathjax-init.js"></script><script defer="True" src="assets/vendor/mathjax/tex-chtml-full.js"></script><script defer="" src="assets/papiro.js"></script><meta content="2026-10-29" name="date"/></head><body><header class="site-header"><div class="site-header-inner"><div class="identity"><em>Jocotoco</em><span class="dot">·</span>Informe Papiro<span class="dot">·</span><span class="date">2024–2025</span></div><nav aria-label="Secciones" class="topnav"><a href="#inicio">Inicio</a><a href="#metodos">Métodos</a><a href="#referencias">Referencias</a></nav></div></header><div class="workspace"><div class="scrollpane article-pane" id="article-scroll"><main class="article"><div class="report-kicker">Informe científico · Reconstrucción metodológica</div>
+<h1>Selección histórica de grabaciones acústicas</h1>
+<div class="subtitle">Métodos y criterios de puntuación utilizados para priorizar audios de aves y anuros destinados a identificación experta, 2024–2025.</div>
+<div class="byline"><div><div class="author">Pedro Galindo Vera</div><div class="affiliation">Fundación Jocotoco · Ciencia, IA y Tecnología Aplicada</div></div><div class="meta">Versión 0.0.8 · Ecuador<br/>Publicado: <time class="publication-date" datetime="2026-10-29">29 de octubre de 2026</time></div></div><section class="section" id="inicio">
+<h2 class="section-title">Resumen y propósito</h2>
+<p>Durante 2024 y 2025 se desarrollaron y aplicaron procedimientos computacionales para <strong>priorizar grabaciones de monitoreo acústico pasivo</strong> destinadas a la escucha e identificación taxonómica por especialistas en vocalizaciones de aves y anuros. La selección no intentaba reemplazar la identificación humana: determinaba qué archivos completos resultaba más útil escuchar, en qué franjas horarias y con qué cuotas por grabadora. Se recurrió a cuatro familias que se solaparon: reconocedores de Towsey, índices ecoacústicos y control de lluvia, regiones de interés (ROI), y detecciones BirdNET agregadas mediante funciones de puntuación.</p>
+<p>Este informe reconstruye las <strong>reglas efectivamente programadas</strong>, los criterios de ranking, sus ecuaciones y cambios relevantes. Diferencia entre una variante calculada, la columna seleccionada en el código y una entrega retrospectivamente atribuida mediante evidencias de archivos. No evalúa desempeño predictivo ni constituye un benchmark de las identificaciones posteriores.</p>
+<figure aria-label="Fórmula seleccion" class="mathline" data-equation="seleccion" data-tex-source="referencias/formulas/seleccion.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<msub>
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-variant="-tex-calligraphic" mathvariant="script">P</mi>
+</mrow>
+<mrow data-mjx-texclass="ORD">
+<mi>g</mi>
+</mrow>
+</msub>
+<mo>=</mo>
+<msub>
+<mi>Top</mi>
+<mrow data-mjx-texclass="ORD">
+<msub>
+<mi>m</mi>
+<mi>g</mi>
+</msub>
+</mrow>
+</msub>
+<mo fence="false" stretchy="false">{</mo>
+<mi>i</mi>
+<mo>∈</mo>
+<msub>
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-variant="-tex-calligraphic" mathvariant="script">E</mi>
+</mrow>
+<mrow data-mjx-texclass="ORD">
+<mi>g</mi>
+</mrow>
+</msub>
+<mo>;</mo>
+<mstyle scriptlevel="0">
+<mspace width="0.167em"></mspace>
+</mstyle>
+<msub>
+<mi>S</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+</mrow>
+</msub>
+<mo fence="false" stretchy="false">}</mo>
+</math></div><div class="math-source">\[\mathcal{P}_{g}=\operatorname{Top}_{m_g}\{i\in\mathcal{E}_{g};\,S_{i}\}\]</div></figure>
+<p>Los audios se agrupaban por grabadora o identificador; primero se aplicaban los filtros espaciales, temporales o acústicos, luego se ordenaban según un score específico y se seleccionaba una cuota o un intervalo de posiciones. Algunas rutinas optaban por muestreo o tramos intermedios del ranking.</p>
+</section><section class="section" id="cronologia"><h2 class="section-title">Desarrollo de las estrategias</h2>
+<div class="table-block"><div class="table-wrap"><table class="scientific-table"><thead><tr><th>Período documentado</th><th>Procedimiento</th><th>Aplicación</th></tr></thead><tbody>
+<tr><td>Marzo–junio de 2024</td><td>Reconocedores Towsey / AnalysisPrograms</td><td>Detección de patrones sonoros y puntuación por frecuencia de activación.</td></tr>
+<tr><td>Desde agosto de 2024</td><td>BirdNET inicial</td><td>Agregación de detecciones de especies, selección y exportación de WAV para aves.</td></tr>
+<tr><td>Agosto de 2024</td><td>Índices ecoacústicos, PSD y ADI</td><td>Control de interferencia de lluvia y selección de anuros por lugar y hora.</td></tr>
+<tr><td>Septiembre de 2024</td><td>ROI y HDBSCAN</td><td>Tipos de regiones espectrotemporales y ranking de anuros.</td></tr>
+<tr><td>Enero–mayo de 2025</td><td>BirdNET por clases y scores combinados</td><td>Puntuaciones para aves y anuros con alternativas aditivas, multiplicativas y por cociente; control de ruido y lluvia.</td></tr>
+</tbody></table></div></div>
+<p>Estas líneas metodológicas <strong>coexistieron y se ajustaron según el paisaje, el grupo taxonómico y el conjunto de grabaciones</strong>. Las diferencias entre versiones se describen en las secciones siguientes.</p>
+</section><section class="section" id="metodos"><h2 class="section-title">Criterios de selección y fundamento matemático</h2>
+<h3>1. Reconocedores Towsey: diversidad de respuestas</h3>
+<p>Se analizaron las respuestas de varios reconocedores preentrenados en sonidos de otras regiones. La hipótesis era que una grabación capaz de activar diferentes reconocedores podía contener una mayor variedad de patrones bioacústicos de interés, aunque las etiquetas originales de esos reconocedores no fueran válidas para identificar especies neotropicales. Se introdujo un peso inverso a la prevalencia de cada detector en el corpus: <a class="cite" href="#ref-8">[8]</a>; <a class="cite" href="#ref-9">[9]</a></p><p>La documentación oficial de QUT presenta los reconocedores de eventos acústicos y especifica la referencia del programa. La versión bibliográfica citada identifica el software de origen; no establece por sí sola la versión exacta del ejecutable empleado en cada selección histórica.</p>
+<figure aria-label="Fórmula towsey" class="mathline" data-equation="towsey" data-tex-source="referencias/formulas/towsey.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<msub>
+<mi>S</mi>
+<mi>i</mi>
+</msub>
+<mo>=</mo>
+<munderover>
+<mo data-mjx-texclass="OP">∑</mo>
+<mrow data-mjx-texclass="ORD">
+<mi>j</mi>
+<mo>=</mo>
+<mn>1</mn>
+</mrow>
+<mrow data-mjx-texclass="ORD">
+<mi>J</mi>
+</mrow>
+</munderover>
+<mfrac>
+<msub>
+<mi>x</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>j</mi>
+</mrow>
+</msub>
+<mrow>
+<mn>1</mn>
+<mo>+</mo>
+<msub>
+<mi>p</mi>
+<mi>j</mi>
+</msub>
+</mrow>
+</mfrac>
+</math></div><div class="math-source">\[S_i=\sum_{j=1}^{J}\frac{x_{ij}}{1+p_j}\]</div></figure>
+<p>Donde <em>x<sub>ij</sub></em> indica una respuesta del detector <em>j</em> en el audio <em>i</em> y <em>p<sub>j</sub></em> es su prevalencia en el conjunto analizado. Esta métrica mide <strong>heterogeneidad de respuestas automáticas</strong>, no riqueza de especies.</p>
+<h3>2. Índices ecoacústicos y control de lluvia</h3>
+<p>Los cálculos se apoyaron en <em>scikit-maad</em> —biblioteca para espectrogramas, índices y procesamiento de paisaje sonoro— <a class="cite" href="#ref-1">[1]</a> <a class="cite" href="#ref-2">[2]</a>. Entre los índices calculados se examinó ADI, utilizado operativamente para ordenar grabaciones de anuros. La lluvia se trató como una fuente de interferencia acústica, siguiendo el problema documentado por Sánchez-Giraldo y cols. <a class="cite" href="#ref-3">[3]</a>. Para las selecciones se calculó una variable experimental <code>sPSD</code> a partir de la energía espectral en una banda de bajas frecuencias, además de diferencias temporales de ese indicador.</p>
+<figure aria-label="Fórmula psd" class="mathline" data-equation="psd" data-tex-source="referencias/formulas/psd.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">sPSD</mi>
+</mrow>
+<mo>=</mo>
+<mfrac>
+<mn>2</mn>
+<mrow>
+<mn>1</mn>
+<mo>+</mo>
+<mi>exp</mi>
+<mo data-mjx-texclass="NONE">⁡</mo>
+<mo stretchy="false">(</mo>
+<mo>−</mo>
+<mn>1000</mn>
+<mstyle scriptlevel="0">
+<mspace width="0.167em"></mspace>
+</mstyle>
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">PSD</mi>
+</mrow>
+<mo stretchy="false">)</mo>
+</mrow>
+</mfrac>
+<mo>−</mo>
+<mn>1</mn>
+</math></div><div class="math-source">\[\mathrm{sPSD}=\frac{2}{1+\exp(-1000\,\mathrm{PSD})}-1\]</div></figure>
+<p>Los valores del indicador se clasificaron en <strong>diez grupos de intensidad por grabadora</strong> mediante <em>k</em>-means. En algunos procedimientos se filtraron grupos con menor lluvia, por ejemplo <code>[0,1]</code> o <code>[0,2]</code>, y se aplicó un rango <code>ADI=[0,2.5]</code> junto con diferencias retrospectivas de <code>sPSD=[−1,−0.1]</code>. La llamada histórica establece <code>ADI_creciente=True</code>: se priorizaban los valores menores, no necesariamente los más altos. El índice experimental no representa una medición meteorológica calibrada.</p>
+<p>Las franjas observadas incluyen <strong>00:00–04:00, 10:00–16:00 y 19:00–24:00</strong>; algunas salidas usaban las diez mejores grabaciones por identificador, otras cinco o una muestra aleatoria de once, conforme a la llamada específica. La literatura sobre ADI sirve para fundamentar el índice, no para atribuirle una capacidad taxonómica demostrada en este conjunto <a class="cite" href="#ref-4">[4]</a>.</p>
+<h3>3. ROI: segmentación, características y tipos acústicos</h3>
+<p>El procedimiento ROI empleaba las funciones de <em>scikit-maad</em> <a class="cite" href="#ref-1">[1]</a> <a class="cite" href="#ref-2">[2]</a> <a class="cite" href="#ref-5">[5]</a>: espectrograma, ecualización mediana para reducir ruido estacionario, suavizado, máscara de actividad y extracción de regiones <code>rois.select_rois</code>. Se restringieron frecuencias, en una implementación, aproximadamente a <strong>500–5000 Hz</strong>; se calcularon frecuencia mínima y máxima, duración y área de cada región. Sobre esas cuatro variables se aplicó <strong>HDBSCAN</strong> para agrupar patrones de ROI <a class="cite" href="#ref-6">[6]</a>; los elementos no agrupados (etiqueta −1) se excluyeron del conteo de tipos.</p>
+<figure aria-label="Fórmula roi types" class="mathline" data-equation="roi_types" data-tex-source="referencias/formulas/roi_types.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<msub>
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">ROItypes</mi>
+</mrow>
+<mi>i</mi>
+</msub>
+<mo>=</mo>
+<mi mathvariant="normal">#</mi>
+<mo fence="false" stretchy="false">{</mo>
+<mi>k</mi>
+<mo>≥</mo>
+<mn>0</mn>
+<mo>:</mo>
+<mstyle scriptlevel="0">
+<mspace width="0.167em"></mspace>
+</mstyle>
+<mi>k</mi>
+<mtext> es un grupo HDBSCAN del audio </mtext>
+<mi>i</mi>
+<mo fence="false" stretchy="false">}</mo>
+</math></div><div class="math-source">\[\mathrm{ROItypes}_i=\#\{k\geq0:\,k\text{ es un grupo HDBSCAN del audio } i\}\]</div></figure>
+<p><code>ROItypes</code> representaba por tanto el número de tipos de regiones detectados, <strong>no un conteo de especies</strong>. La implementación histórica de exportación ordena este indicador de forma <strong>descendente</strong>, aunque el argumento se llamara <code>ROItypes_creciente=True</code>. Las selecciones incluían 00:00–05:00 y 19:00–24:00, cuotas de seis elementos o un tramo de posiciones <code>[7:14]</code>, según el destino configurado. Una variante se aplicó a Buenaventura y otra a Jorupe.</p>
+<h3>4. BirdNET: scores de especies, clases y penalizaciones</h3><p><strong>Origen de las ponderaciones.</strong> Los coeficientes de los ensayos fueron establecidos por reglas heurísticas. Un «peso» igual a 1 en las sumas, o un divisor <code>1 + señal interferente</code>, expresa una decisión de diseño, <strong>no un parámetro ajustado con datos etiquetados</strong>. La comparación de fórmulas siguiente reconstruye lo implementado, no determina cuál tuvo mejor rendimiento biológico.</p><p><strong>De una detección al score de cada WAV.</strong> El punto de partida era la tabla de detecciones de BirdNET: ruta del archivo, nombre científico y confianza de cada evento. Para cada especie <em>s</em> en el audio <em>i</em>, se retenía el máximo de las confianzas de sus eventos (<code>pivot_table(..., aggfunc='max', fill_value=0)</code>), evitando sumar varias ventanas de la misma especie como si fueran especies diferentes.</p><figure aria-label="Fórmula confianza especie" class="mathline" data-equation="confianza_especie" data-tex-source="referencias/formulas/confianza_especie.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<msub>
+<mi>q</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>s</mi>
+</mrow>
+</msub>
+<mo>=</mo>
+<munder>
+<mo data-mjx-texclass="OP" movablelimits="true">max</mo>
+<mrow data-mjx-texclass="ORD">
+<mi>e</mi>
+<mo>∈</mo>
+<mi>E</mi>
+<mo stretchy="false">(</mo>
+<mi>i</mi>
+<mo>,</mo>
+<mi>s</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</munder>
+<msub>
+<mi>c</mi>
+<mi>e</mi>
+</msub>
+</math></div><div class="math-source">\[q_{is}=\max_{e\in E(i,s)}c_e\]</div></figure><p>Después se agrupaban las especies según la clase taxonómica asignada (<code>Amphibia</code>, <code>Aves</code>, <code>Insecta</code>, <code>Mammalia</code>, <code>Antropofonia</code>) y se calculaban dos magnitudes: suma de confianzas <em>C</em> y número de especies con confianza positiva <em>n</em>. Estos son los componentes de las funciones exploradas, <strong>no pesos entrenados por aprendizaje automático</strong>.</p><figure aria-label="Fórmula agregados clase" class="mathline" data-equation="agregados_clase" data-tex-source="referencias/formulas/agregados_clase.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<mtable columnalign="right left" columnspacing="0em" displaystyle="true" rowspacing="3pt">
+<mtr>
+<mtd>
+<msub>
+<mi>C</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>k</mi>
+</mrow>
+</msub>
+</mtd>
+<mtd>
+<mi></mi>
+<mo>=</mo>
+<munder>
+<mo data-mjx-texclass="OP">∑</mo>
+<mrow data-mjx-texclass="ORD">
+<mi>s</mi>
+<mo>∈</mo>
+<mi>k</mi>
+</mrow>
+</munder>
+<msub>
+<mi>q</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>s</mi>
+</mrow>
+</msub>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<msub>
+<mi>n</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>k</mi>
+</mrow>
+</msub>
+</mtd>
+<mtd>
+<mi></mi>
+<mo>=</mo>
+<munder>
+<mo data-mjx-texclass="OP">∑</mo>
+<mrow data-mjx-texclass="ORD">
+<mi>s</mi>
+<mo>∈</mo>
+<mi>k</mi>
+</mrow>
+</munder>
+<mrow data-mjx-texclass="ORD">
+<mn mathvariant="bold">1</mn>
+</mrow>
+<mo stretchy="false">(</mo>
+<msub>
+<mi>q</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>s</mi>
+</mrow>
+</msub>
+<mo>&gt;</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mtd>
+</mtr>
+</mtable>
+</math></div><div class="math-source">\[\begin{aligned}C_{ik}&amp;=\sum_{s\in k}q_{is}\\ n_{ik}&amp;=\sum_{s\in k}\mathbf{1}(q_{is}&gt;0)\end{aligned}\]</div></figure>
+<p>BirdNET proporcionaba detecciones preliminares, cada una con un nivel de confianza, para seleccionar grabaciones prometedoras <a class="cite" href="#ref-7">[7]</a>. Las versiones más tempranas resumían los puntajes por especie y grabación; se priorizaron, entre otras alternativas, sumas de confidencias medias por especie, conteos de especies y funciones que combinaban suma de confianza y número de especies detectadas.</p>
+<figure aria-label="Fórmula bird" class="mathline" data-equation="bird" data-tex-source="referencias/formulas/bird.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<msub>
+<mi>S</mi>
+<mi>i</mi>
+</msub>
+<mo>=</mo>
+<munder>
+<mo data-mjx-texclass="OP">∑</mo>
+<mrow data-mjx-texclass="ORD">
+<mi>s</mi>
+</mrow>
+</munder>
+<msub>
+<mover>
+<mi>c</mi>
+<mo accent="true">―</mo>
+</mover>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>s</mi>
+</mrow>
+</msub>
+</math></div><div class="math-source">\[S_i=\sum_{s}\overline c_{is}\]</div></figure>
+<p>En los desarrollos posteriores se formó un vector de puntuaciones para <code>Aves</code>, <code>Amphibia</code>, <code>Insecta</code>, <code>Mammalia</code> y <code>Antropofonia</code>. Una opción combinaba las puntuaciones de especies por clase usando suma de confianza y factor logarítmico del número de especies:</p>
+<figure aria-label="Fórmula producto" class="mathline" data-equation="producto" data-tex-source="referencias/formulas/producto.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<msub>
+<mi>S</mi>
+<mi>i</mi>
+</msub>
+<mo>=</mo>
+<mrow data-mjx-texclass="INNER">
+<mo data-mjx-texclass="OPEN">(</mo>
+<munder>
+<mo data-mjx-texclass="OP">∑</mo>
+<mi>s</mi>
+</munder>
+<msub>
+<mi>q</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>s</mi>
+</mrow>
+</msub>
+<mo data-mjx-texclass="CLOSE">)</mo>
+</mrow>
+<mi>ln</mi>
+<mo data-mjx-texclass="NONE">⁡</mo>
+<mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo>+</mo>
+<msub>
+<mi>n</mi>
+<mi>i</mi>
+</msub>
+<mo stretchy="false">)</mo>
+</math></div><div class="math-source">\[S_i=\left(\sum_s q_{is}\right)\ln(1+n_i)\]</div></figure><p><strong>¿Por qué multiplicar por el logaritmo?</strong> Se buscó favorecer grabaciones con más de una detección candidata, sin hacer que el simple conteo creciera linealmente. En un ensayo previo de enero de 2025 se sustituyó la suma de confianzas por su exponencial, lo que acentuaba las diferencias entre grabaciones con evidencia elevada. Cada puntuación de clase se dividía después por su máximo en el conjunto analizado:</p><figure aria-label="Fórmula clase exponencial" class="mathline" data-equation="clase_exponencial" data-tex-source="referencias/formulas/clase_exponencial.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<mtable columnalign="right left" columnspacing="0em" displaystyle="true" rowspacing="3pt">
+<mtr>
+<mtd>
+<msub>
+<mi>P</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>k</mi>
+</mrow>
+</msub>
+</mtd>
+<mtd>
+<mi></mi>
+<mo>=</mo>
+<msup>
+<mi>e</mi>
+<mrow data-mjx-texclass="ORD">
+<msub>
+<mi>C</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>k</mi>
+</mrow>
+</msub>
+</mrow>
+</msup>
+<mi>ln</mi>
+<mo data-mjx-texclass="NONE">⁡</mo>
+<mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo>+</mo>
+<msub>
+<mi>n</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>k</mi>
+</mrow>
+</msub>
+<mo stretchy="false">)</mo>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<msub>
+<mi>S</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>k</mi>
+</mrow>
+</msub>
+</mtd>
+<mtd>
+<mi></mi>
+<mo>=</mo>
+<mfrac>
+<msub>
+<mi>P</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>k</mi>
+</mrow>
+</msub>
+<mrow>
+<munder>
+<mo data-mjx-texclass="OP" movablelimits="true">max</mo>
+<mi>j</mi>
+</munder>
+<msub>
+<mi>P</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>j</mi>
+<mi>k</mi>
+</mrow>
+</msub>
+</mrow>
+</mfrac>
+</mtd>
+</mtr>
+</mtable>
+</math></div><div class="math-source">\[\begin{aligned}P_{ik}&amp;=e^{C_{ik}}\ln(1+n_{ik})\\ S_{ik}&amp;=\frac{P_{ik}}{\max_j P_{jk}}\end{aligned}\]</div></figure><p>La exponencial y el logaritmo expresan <strong>decisiones heurísticas de priorización</strong>; no proceden de un ajuste estadístico contra identificaciones expertas. La normalización permite ordenar dentro del conjunto de esa corrida, pero impide interpretar los valores normalizados como probabilidades calibradas o compararlos directamente entre conjuntos distintos.</p>
+<p>Otra calculaba un score de tipo Shannon sobre las columnas de confianza de cada especie:</p>
+<figure aria-label="Fórmula shannon" class="mathline" data-equation="shannon" data-tex-source="referencias/formulas/shannon.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<msubsup>
+<mi>H</mi>
+<mi>i</mi>
+<mrow data-mjx-texclass="ORD">
+<mo>∗</mo>
+</mrow>
+</msubsup>
+<mo>=</mo>
+<mo>−</mo>
+<munder>
+<mo data-mjx-texclass="OP">∑</mo>
+<mrow data-mjx-texclass="ORD">
+<mi>s</mi>
+<mo>∈</mo>
+<msub>
+<mi>E</mi>
+<mi>i</mi>
+</msub>
+</mrow>
+</munder>
+<msub>
+<mi>a</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>s</mi>
+</mrow>
+</msub>
+<mi>ln</mi>
+<mo data-mjx-texclass="NONE">⁡</mo>
+<mo stretchy="false">(</mo>
+<msub>
+<mi>a</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>s</mi>
+</mrow>
+</msub>
+<mo stretchy="false">)</mo>
+</math></div><div class="math-source">\[H_i^{*}=-\sum_{s\in E_i}a_{is}\ln(a_{is})\]</div></figure><figure aria-label="Fórmula shannon transform" class="mathline" data-equation="shannon_transform" data-tex-source="referencias/formulas/shannon_transform.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<msub>
+<mi>a</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>s</mi>
+</mrow>
+</msub>
+<mo>=</mo>
+<mn>1</mn>
+<mo>−</mo>
+<mi>exp</mi>
+<mo data-mjx-texclass="NONE">⁡</mo>
+<mrow data-mjx-texclass="INNER">
+<mo data-mjx-texclass="OPEN">(</mo>
+<mo>−</mo>
+<munder>
+<mo data-mjx-texclass="OP">∑</mo>
+<mi>k</mi>
+</munder>
+<msub>
+<mi>c</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>s</mi>
+<mi>k</mi>
+</mrow>
+</msub>
+<mo data-mjx-texclass="CLOSE">)</mo>
+</mrow>
+</math></div><div class="math-source">\[a_{is}=1-\exp\left(-\sum_k c_{isk}\right)\]</div></figure><p class="math-nota">La transformación auxiliar de las respuestas se expresa por separado:</p>
+<p>El uso de una suma de términos <em>−p · ln(p)</em> debe entenderse como <strong>heurística de diversidad de activaciones</strong>: los valores agregados por especie no siempre forman una distribución normalizada de probabilidades. Se ensayaron agregadores <code>max</code>, promedio geométrico, suma y funciones exponenciales, no todos empleados en las mismas entregas.</p>
+<h3>Combinación de anuros: variante aditiva y variante multiplicativa</h3>
+<p>Una versión de enero de 2025 formuló expresamente un <strong>score aditivo para anuros</strong>, denominado <code>AnurosScore1</code>. Las señales favorables provenían de Amphibia; se restaban lluvia y detecciones de aves, insectos y antropofonía:</p>
+<figure aria-label="Fórmula combinacion lineal" class="mathline" data-equation="combinacion_lineal" data-tex-source="referencias/formulas/combinacion_lineal.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<mtable columnalign="right left" columnspacing="0em" displaystyle="true" rowspacing="3pt">
+<mtr>
+<mtd>
+<msub>
+<mi>S</mi>
+<mrow data-mjx-texclass="ORD">
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">anuros</mi>
+</mrow>
+</mrow>
+</msub>
+</mtd>
+<mtd>
+<mi></mi>
+<mo>=</mo>
+<msub>
+<mi>S</mi>
+<mrow data-mjx-texclass="ORD">
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">Amphibia</mi>
+</mrow>
+</mrow>
+</msub>
+<mo>−</mo>
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">sPSD</mi>
+</mrow>
+<mo>−</mo>
+<msub>
+<mi>S</mi>
+<mrow data-mjx-texclass="ORD">
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">Aves</mi>
+</mrow>
+</mrow>
+</msub>
+</mtd>
+</mtr>
+<mtr>
+<mtd></mtd>
+<mtd>
+<mstyle scriptlevel="0">
+<mspace width="1em"></mspace>
+</mstyle>
+<mo>−</mo>
+<msub>
+<mi>S</mi>
+<mrow data-mjx-texclass="ORD">
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">Insecta</mi>
+</mrow>
+</mrow>
+</msub>
+<mo>−</mo>
+<msub>
+<mi>S</mi>
+<mrow data-mjx-texclass="ORD">
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">Antropofonia</mi>
+</mrow>
+</mrow>
+</msub>
+</mtd>
+</mtr>
+</mtable>
+</math></div><div class="math-source">\[\begin{aligned}S_{\mathrm{anuros}}&amp;=S_{\mathrm{Amphibia}}-\mathrm{sPSD}-S_{\mathrm{Aves}}\\&amp;\quad-S_{\mathrm{Insecta}}-S_{\mathrm{Antropofonia}}\end{aligned}\]</div></figure>
+<p>La misma versión definió una alternativa <code>AnurosScore2</code>, multiplicativa: cada fuente de interferencia reduce el score a través de un denominador.</p>
+<figure aria-label="Fórmula combinacion multiplicativa" class="mathline" data-equation="combinacion_multiplicativa" data-tex-source="referencias/formulas/combinacion_multiplicativa.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<mtable columnalign="right left" columnspacing="0em" displaystyle="true" rowspacing="3pt">
+<mtr>
+<mtd>
+<msub>
+<mi>S</mi>
+<mrow data-mjx-texclass="ORD">
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">anuros</mi>
+</mrow>
+<mo>,</mo>
+<mn>2</mn>
+</mrow>
+</msub>
+</mtd>
+<mtd>
+<mi></mi>
+<mo>=</mo>
+<mfrac>
+<msub>
+<mi>S</mi>
+<mrow data-mjx-texclass="ORD">
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">Amphibia</mi>
+</mrow>
+</mrow>
+</msub>
+<mrow>
+<mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo>+</mo>
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">sPSD</mi>
+</mrow>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo>+</mo>
+<msub>
+<mi>S</mi>
+<mrow data-mjx-texclass="ORD">
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">Aves</mi>
+</mrow>
+</mrow>
+</msub>
+<mo stretchy="false">)</mo>
+</mrow>
+</mfrac>
+</mtd>
+</mtr>
+<mtr>
+<mtd></mtd>
+<mtd>
+<mstyle scriptlevel="0">
+<mspace width="2em"></mspace>
+</mstyle>
+<mo>×</mo>
+<mfrac>
+<mn>1</mn>
+<mrow>
+<mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo>+</mo>
+<msub>
+<mi>S</mi>
+<mrow data-mjx-texclass="ORD">
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">Insecta</mi>
+</mrow>
+</mrow>
+</msub>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo>+</mo>
+<msub>
+<mi>S</mi>
+<mrow data-mjx-texclass="ORD">
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">Antropofonia</mi>
+</mrow>
+</mrow>
+</msub>
+<mo stretchy="false">)</mo>
+</mrow>
+</mfrac>
+</mtd>
+</mtr>
+</mtable>
+</math></div><div class="math-source">\[\begin{aligned}S_{\mathrm{anuros},2}&amp;=\frac{S_{\mathrm{Amphibia}}}{(1+\mathrm{sPSD})(1+S_{\mathrm{Aves}})}\\&amp;\qquad\times\frac{1}{(1+S_{\mathrm{Insecta}})(1+S_{\mathrm{Antropofonia}})}\end{aligned}\]</div></figure><p><strong>Sentido de los ensayos.</strong> La combinación aditiva establecía una compensación directa: cada incremento unitario en una señal desfavorable restaba un punto del score. La variante multiplicativa trataba cada fuente de interferencia como una reducción proporcional e independiente. Ambas eran hipótesis operativas para dedicar menos escuchas a archivos dominados por lluvia o sonidos distintos de anuros. Sus efectos no son equivalentes: en la primera importa la escala absoluta de cada término; en la segunda, la sucesión de divisores. No hay en los scripts evidencia de una optimización empírica de esos coeficientes ni de una comparación validada con el etiquetado final.</p>
+<p><strong>Distinción entre ensayo y selección activa (enero de 2025).</strong> En <code>ScoringDeteccionEspeciesGeneralBirdNET_NARUPA_v20250122164506.py</code> se calcularon <code>AnurosScore1</code> (aditivo) y <code>AnurosScore2</code> (multiplicativo). La primera asigna implícitamente coeficiente <strong>+1</strong> a <code>AmphibiaScore</code> y <strong>−1</strong> a cada penalizador: <code>sPSD</code>, <code>AvesScore</code>, <code>InsectaScore</code> y <code>AntropofoniaScore</code>. Son coeficientes fijados manualmente, <strong>no pesos aprendidos</strong>. No obstante, esas columnas no son el ranking activo en el bloque final: allí se establece <code>score = 'AmphibiaScore'</code>, y esa columna ya había sido <em>recalculada</em> por <code>agregar_score_clase_mejorado</code>:</p><figure aria-label="Fórmula ene activo" class="mathline" data-equation="ene_activo" data-tex-source="referencias/formulas/ene_activo.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<mtable columnalign="right left" columnspacing="0em" displaystyle="true" rowspacing="3pt">
+<mtr>
+<mtd>
+<msub>
+<mi>T</mi>
+<mi>i</mi>
+</msub>
+</mtd>
+<mtd>
+<mi></mi>
+<mo>=</mo>
+<mfrac>
+<mrow>
+<msub>
+<mi>C</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mo>,</mo>
+<mi>A</mi>
+</mrow>
+</msub>
+<mi>ln</mi>
+<mo data-mjx-texclass="NONE">⁡</mo>
+<mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo>+</mo>
+<msub>
+<mi>n</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mo>,</mo>
+<mi>A</mi>
+</mrow>
+</msub>
+<mo stretchy="false">)</mo>
+</mrow>
+<mrow>
+<mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo>+</mo>
+<msub>
+<mi>R</mi>
+<mi>i</mi>
+</msub>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo>+</mo>
+<msub>
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">sPSD</mi>
+</mrow>
+<mi>i</mi>
+</msub>
+<mo stretchy="false">)</mo>
+</mrow>
+</mfrac>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<msub>
+<mi>S</mi>
+<mi>i</mi>
+</msub>
+</mtd>
+<mtd>
+<mi></mi>
+<mo>=</mo>
+<mfrac>
+<msub>
+<mi>T</mi>
+<mi>i</mi>
+</msub>
+<mrow>
+<munder>
+<mo data-mjx-texclass="OP" movablelimits="true">max</mo>
+<mi>j</mi>
+</munder>
+<msub>
+<mi>T</mi>
+<mi>j</mi>
+</msub>
+</mrow>
+</mfrac>
+</mtd>
+</mtr>
+</mtable>
+</math></div><div class="math-source">\[\begin{aligned}T_i&amp;=\frac{C_{i,A}\ln(1+n_{i,A})}{(1+R_i)(1+\mathrm{sPSD}_i)}\\ S_i&amp;=\frac{T_i}{\max_j T_j}\end{aligned}\]</div></figure><p>En esta expresión, <em>A</em> corresponde a <code>Amphibia</code> y <em>R</em> es la suma de confianzas de especies clasificadas en <code>Aves</code>, <code>Insecta</code> y <code>Antropofonia</code>. Se aplicaron dos penalizaciones con coeficiente unitario: <code>1/(1+R)</code> y <code>1/(1+sPSD)</code>. Así, la selección activa <strong>sí penalizaba ruido y lluvia</strong>, aunque su columna se llamara simplemente <code>AmphibiaScore</code>. El código muestra una selección de los 15 valores mayores por grabadora y una visualización; no debe confundirse esa visualización con una entrega de WAV verificada.</p>
+<h3>Refinamiento posterior: corrección conjunta de ruido y lluvia</h3>
+<p>Una implementación posterior para anuros en Podocarpus–El Cóndor calculaba la suma de puntuaciones de detección de <code>Aves</code>, <code>Insecta</code> y <code>Antropofonia</code> como interferencia <em>R</em>, y corregía la heurística de Amphibia por dos factores de penalización:</p>
+<figure aria-label="Fórmula score cociente" class="mathline" data-equation="score_cociente" data-tex-source="referencias/formulas/score_cociente.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<msub>
+<mi>S</mi>
+<mrow data-mjx-texclass="ORD">
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">cociente</mi>
+</mrow>
+</mrow>
+</msub>
+<mo>=</mo>
+<mfrac>
+<msub>
+<mi>H</mi>
+<mrow data-mjx-texclass="ORD">
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">Amphibia</mi>
+</mrow>
+</mrow>
+</msub>
+<mrow>
+<mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo>+</mo>
+<mi>R</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo>+</mo>
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">sPSD</mi>
+</mrow>
+<mo stretchy="false">)</mo>
+</mrow>
+</mfrac>
+</math></div><div class="math-source">\[S_{\mathrm{cociente}}=\frac{H_{\mathrm{Amphibia}}}{(1+R)(1+\mathrm{sPSD})}\]</div></figure><p><strong>Cálculo efectivo de mayo de 2025.</strong> En <code>ScoringDeteccionEspeciesGeneralBirdNET_anfibios_PODOCONDOR_v20250526163215.py</code> se construyó primero, para cada WAV, una matriz de máximos de confianza por especie. La función base se modificó desde <code>C·ln(1+n)</code> hacia <code>−Σq·ln(q)</code> calculado sobre las confianzas positivas de Amphibia; luego se dividía por el ruido de otras clases y por <code>1+sPSD</code>:</p><figure aria-label="Fórmula may activo" class="mathline" data-equation="may_activo" data-tex-source="referencias/formulas/may_activo.tex" role="group"><div aria-label="Ecuación matemática" class="math-fallback"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+<mtable columnalign="right left" columnspacing="0em" displaystyle="true" rowspacing="3pt">
+<mtr>
+<mtd>
+<msub>
+<mi>H</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mo>,</mo>
+<mi>A</mi>
+</mrow>
+</msub>
+</mtd>
+<mtd>
+<mi></mi>
+<mo>=</mo>
+<mo>−</mo>
+<munder>
+<mo data-mjx-texclass="OP">∑</mo>
+<mrow data-mjx-texclass="ORD">
+<mi>s</mi>
+<mo>∈</mo>
+<mi>A</mi>
+<mo>,</mo>
+<mstyle scriptlevel="0">
+<mspace width="0.278em"></mspace>
+</mstyle>
+<msub>
+<mi>q</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>s</mi>
+</mrow>
+</msub>
+<mo>&gt;</mo>
+<mn>0</mn>
+</mrow>
+</munder>
+<msub>
+<mi>q</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>s</mi>
+</mrow>
+</msub>
+<mi>ln</mi>
+<mo data-mjx-texclass="NONE">⁡</mo>
+<mo stretchy="false">(</mo>
+<msub>
+<mi>q</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mi>s</mi>
+</mrow>
+</msub>
+<mo stretchy="false">)</mo>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<msub>
+<mi>U</mi>
+<mi>i</mi>
+</msub>
+</mtd>
+<mtd>
+<mi></mi>
+<mo>=</mo>
+<mfrac>
+<msub>
+<mi>H</mi>
+<mrow data-mjx-texclass="ORD">
+<mi>i</mi>
+<mo>,</mo>
+<mi>A</mi>
+</mrow>
+</msub>
+<mrow>
+<mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo>+</mo>
+<msub>
+<mi>R</mi>
+<mi>i</mi>
+</msub>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo>+</mo>
+<msub>
+<mrow data-mjx-texclass="ORD">
+<mi data-mjx-auto-op="false">sPSD</mi>
+</mrow>
+<mi>i</mi>
+</msub>
+<mo stretchy="false">)</mo>
+</mrow>
+</mfrac>
+</mtd>
+</mtr>
+</mtable>
+</math></div><div class="math-source">\[\begin{aligned}H_{i,A}&amp;=-\sum_{s\in A,\;q_{is}&gt;0}q_{is}\ln(q_{is})\\ U_i&amp;=\frac{H_{i,A}}{(1+R_i)(1+\mathrm{sPSD}_i)}\end{aligned}\]</div></figure><p>Después se calculaba <code>AmphibiaScoreCociente = U / max(U)</code> y se ordenaba en sentido descendente. El factor <code>R</code> agregaba directamente las confianzas de <code>Aves</code>, <code>Insecta</code> y <code>Antropofonia</code>; no había pesos diferenciados ni una transformación previa de <code>R</code> para esta columna. La medida tipo Shannon no constituye entropía taxonómica calibrada, pues las confianzas BirdNET por especie no son necesariamente probabilidades que sumen uno.</p><p><strong>Una propiedad relevante de esta función:</strong> la contribución individual <code>−q·ln(q)</code> alcanza su máximo cuando <em>q ≈ 0,368</em> y tiende a cero tanto con <em>q</em> muy pequeña como con <em>q</em> cercana a uno. Por ello, la suma <strong>no aumenta necesariamente con la confianza</strong> y puede favorecer varias detecciones intermedias frente a una única detección muy segura. El criterio debe interpretarse como un ensayo para diversificar la escucha, no como una estimación calibrada de riqueza de anuros o probabilidad de presencia.</p>
+<p>La selección activa de Podocarpus–El Cóndor utilizaba <strong><code>AmphibiaScoreCociente</code></strong>, con horario de <strong>19:00–04:00</strong> y <strong>15 audios por grabadora</strong>. La rutina programada copiaba WAV por grabadora y exportaba <code>Seleccion Score BirdNET.csv</code>. También se calculaban alternativas <code>AmphibiaScoreProducto</code> y <code>AmphibiaScoreAditivo</code>. Esta última suma dos veces <code>1−ruido_score</code> (una bajo la rama llamada «lluvia»), sin sustituir el segundo término por <code>1−sPSD</code>; es una peculiaridad de la implementación, no una segunda fórmula de lluvia que debamos atribuir al ranking activo.</p><div class="table-block"><div class="table-wrap"><table class="scientific-table"><thead><tr><th>Etapa</th><th>Coeficientes y operación</th><th>Justificación del ensayo</th></tr></thead><tbody>
+<tr><td>Towsey</td><td><code>1/(1+p)</code> por detector; <code>p</code> = frecuencia de respuesta</td><td>Atenuar detectores que respondían a casi todos los audios.</td></tr>
+<tr><td>Índices y lluvia</td><td>Rangos de ADI, <code>sPSD</code> y grupos <em>k</em>-means; no existe un único score lineal combinado para todas esas versiones</td><td>Evitar interferencia de precipitación y priorizar momentos acústicamente relevantes.</td></tr>
+<tr><td>ROI</td><td>Conteo de tipos HDBSCAN, ranking descendente; sin ponderaciones por especie</td><td>Buscar heterogeneidad de formas espectrotemporales.</td></tr>
+<tr><td>BirdNET, variante aditiva</td><td>Coeficientes <code>+1, −1, −1, −1, −1</code> para anfibios, lluvia, aves, insectos, antropofonía</td><td>Equilibrar señal de interés y señales interferentes.</td></tr>
+<tr><td>BirdNET, selección de enero</td><td><code>C·ln(1+n) / [(1+R)(1+sPSD)]</code>; divisor unitario por término</td><td>Favorecer más confianza y especies con penalización proporcional de ruido y lluvia.</td></tr>
+<tr><td>BirdNET, selección de mayo</td><td><code>H / [(1+R)(1+sPSD)]</code>; división posterior por el máximo</td><td>Priorizar variedad de activaciones de anfibios sin ignorar ruido y lluvia.</td></tr>
+</tbody></table></div></div>
+<p><strong>Ejemplo ilustrativo, no procedente de las grabaciones:</strong> si un audio tiene confianzas de tres especies de anuros <code>(0,7; 0,4; 0,1)</code>, entonces su pseudoentropía es aproximadamente <code>0,847</code>. Con <code>R = 0,6</code> y <code>sPSD = 0,3</code>, el score de mayo <em>antes de normalizar</em> resulta <code>0,847 / (1,6 × 1,3) ≈ 0,407</code>. Para convertirlo en la columna normalizada se divide ese valor por el mayor score bruto de la corrida, lo que no implica una probabilidad de presencia.</p>
+</section><section class="section" id="grupos"><h2 class="section-title">De los scores a las entregas de WAV</h2>
+<p>La selección se concretaba mediante reglas de elegibilidad y exportación. Una misma familia metodológica podía producir paquetes distintos al variar el paisaje, el grupo taxonómico, la grabadora, el período, el sentido del ranking y las cuotas. Algunos procedimientos copiaban directamente los WAV y otros exportaban tablas de control para documentar los archivos elegidos.</p><p>El código de selección de mayo de 2025 configura expresamente <code>score = 'AmphibiaScoreCociente'</code>, <code>numero_audios_por_grabadora = 15</code>, y una llamada a <code>copiar_archivos_por_grabadora</code>. Esta es evidencia de la <em>rutina de selección programada</em>; la correspondencia con cada carpeta histórica de Drive debe verificarse por rutas, tablas y audios, sin atribuirla por semejanza de nombres.</p>
+<div class="table-block"><div class="table-wrap"><table class="scientific-table"><thead><tr><th>Familia / uso</th><th>Filtro o ranking documentado</th><th>Selección y salida</th></tr></thead><tbody>
+<tr><td>BirdNET · aves</td><td>Score por especie; 06:00–09:00 en una selección temprana</td><td>Hasta 17 WAV por identificador en la selección documentada de Cuyuja.</td></tr>
+<tr><td>Índices · anuros</td><td>ADI ascendente, sPSD, categorías de lluvia, diferencias temporales</td><td>5 o 10 mejores por identificador, o muestra de 11; franjas especificadas en código.</td></tr>
+<tr><td>ROI · anuros</td><td>ROItypes descendente; 00–05 y 19–24 h</td><td>6 mejores o posiciones 7 a 13, según destino; WAV y tabla CSV.</td></tr>
+<tr><td>BirdNET · anuros, 2025</td><td>Shannon/clases, penalización por ruido y lluvia</td><td>19–04 h y 15 WAV por grabadora en Podocarpus–El Cóndor; CSV de seguimiento.</td></tr>
+</tbody></table></div></div>
+<p>El paquete transferido era una carpeta con archivos de audio completos, organizada según identificador o grabadora. Su unidad histórica de entrega <strong>no debe confundirse con un subdirectorio interno</strong>. En la reconstrucción de procedencia, las carpetas de antropofonía con fragmentos quedan fuera del universo de selecciones biológicas, sin alterar los archivos originales.</p>
+</section><section class="section" id="alcance"><h2 class="section-title">Trazabilidad e interpretación</h2>
+<p>Las llamadas de exportación y sus parámetros documentan <strong>intenciones operativas presentes en el código</strong>. Para atribuir un paquete a una variante concreta, se necesita concordancia adicional entre ruta de destino, listado tabular, archivos, cantidad por grabadora, horario y columna de puntuación realmente usada. Los nombres de los paquetes o un SHA-256 coincidente, aisladamente, no demuestran qué fórmula los seleccionó.</p>
+<p>Se distinguen por tanto cuatro niveles: procedimiento implementado, procedimiento invocado en código, selección cuyo resultado corresponde a archivos observados y entrega retrospectivamente identificada. Si faltan pruebas, la atribución permanece abierta. La publicación resume los métodos históricos sin reproducir anotaciones individuales, identificaciones expertas, coordenadas sensibles ni los datos privados de las entregas.</p>
+</section><section class="section" id="referencias"><h2 class="section-title">Bibliografía citada y fuentes primarias</h2>
+<ol class="references">
+<li data-reference-number="1" id="ref-1">Ulloa, J. S., Haupert, S., Latorre, J. F., Aubin, T. &amp; Sueur, J. (2021). <em>scikit-maad: An open-source and modular toolbox for quantitative soundscape analysis in Python</em>. <em>Methods in Ecology and Evolution</em>, 12, 2334–2340. <a href="https://doi.org/10.1111/2041-210X.13711" rel="noopener" target="_blank">https://doi.org/10.1111/2041-210X.13711</a>.</li>
+<li data-reference-number="2" id="ref-2">Documentación técnica de <em>scikit-maad</em>. <a href="https://scikit-maad.github.io/" rel="noopener" target="_blank">https://scikit-maad.github.io/</a>. Repositorio original del programa usado para cálculo de índices, máscaras y ROIs.</li>
+<li data-reference-number="3" id="ref-3">Sánchez-Giraldo, C., Bedoya, C. L., Morán-Vásquez, R. A., Isaza, C. V. &amp; Daza, J. M. (2020). <em>Ecoacoustics in the rain: understanding acoustic indices under the most common geophonic source in tropical rainforests</em>. <em>Remote Sensing in Ecology and Conservation</em>, 6, 248–261. <a href="https://doi.org/10.1002/rse2.162" rel="noopener" target="_blank">https://doi.org/10.1002/rse2.162</a>.</li>
+<li data-reference-number="4" id="ref-4">Villanueva-Rivera, L. J., Pijanowski, B. C., Doucette, J. &amp; Pekin, B. (2011). <em>A primer of acoustic analysis for landscape ecologists</em>. <em>Landscape Ecology</em>, 26, 1233–1246. <a href="https://doi.org/10.1007/s10980-011-9636-9" rel="noopener" target="_blank">https://doi.org/10.1007/s10980-011-9636-9</a>.</li>
+<li data-reference-number="5" id="ref-5">Ulloa, J. S., Aubin, T., Llusia, D., Bouveyron, C. &amp; Sueur, J. (2018). <em>Estimating animal acoustic diversity in tropical environments using unsupervised multiresolution analysis</em>. <em>Ecological Indicators</em>, 90, 346–355. <a href="https://doi.org/10.1016/j.ecolind.2018.03.026" rel="noopener" target="_blank">https://doi.org/10.1016/j.ecolind.2018.03.026</a>.</li>
+<li data-reference-number="6" id="ref-6">McInnes, L., Healy, J. &amp; Astels, S. (2017). <em>hdbscan: Hierarchical density based clustering</em>. <em>Journal of Open Source Software</em>, 2(11), 205. <a href="https://doi.org/10.21105/joss.00205" rel="noopener" target="_blank">https://doi.org/10.21105/joss.00205</a>.</li>
+<li data-reference-number="7" id="ref-7">Kahl, S. y cols. (2021). <em>BirdNET: A deep learning solution for avian diversity monitoring</em>. <em>Ecological Informatics</em>, 61, 101236. <a href="https://doi.org/10.1016/j.ecoinf.2021.101236" rel="noopener" target="_blank">https://doi.org/10.1016/j.ecoinf.2021.101236</a>.</li>
+<li data-reference-number="8" id="ref-8">Towsey, M., Truskinger, A., Cottman-Fields, M. &amp; Roe, P. (2018). <a href="https://doi.org/10.5281/zenodo.1188744" rel="noopener noreferrer" target="_blank">Ecoacoustics Audio Analysis Software v18.03.0.41. Zenodo. DOI: 10.5281/zenodo.1188744</a></li><li data-reference-number="9" id="ref-9">QUT Ecoacoustics. <a href="https://ap.qut.ecoacoustics.info/" rel="noopener noreferrer" target="_blank">Analysis Programs (AP.exe): documentación oficial y citación</a></li></ol>
+<p><strong>Fuentes computacionales primarias:</strong> scripts archivados de <code>towsey_seleccion.zip</code>, <code>IndicesAcusticos.zip</code>, <code>BirdNET_scr.zip</code>, <code>anura_song.zip</code> y <code>Seleccion_Audios.zip</code>. Entre los módulos relevantes figuran <code>HerramientasIndicesEspectralesMaad_v202408071418.py</code>, <code>SeleccionAnuros_v202408211532.py</code>, <code>SeleccionAnurosROI_v202409101714.py</code>, <code>ScoringDeteccionEspeciesGeneralBirdNET_NARUPA_v20250122164506.py</code> y <code>ScoringDeteccionEspeciesGeneralBirdNET_anfibios_PODOCONDOR_v20250526163215.py</code>. Las fórmulas específicas proceden de estas implementaciones históricas; las publicaciones citadas fundamentan las herramientas y los conceptos, no los pesos de las heurísticas locales.</p>
+</section></main></div><aside aria-label="Índice" class="scrollpane sidebar-pane" id="sidebar-scroll"><div class="side-group"><div class="side-title">Contenido</div><a href="#inicio">Propósito</a><a href="#cronologia">Cronología</a><a href="#metodos">Matemática y métodos</a><a href="#grupos">Aves, anuros y paquetes</a><a href="#alcance">Alcance</a><a href="#referencias">Referencias</a></div></aside></div><div class="context-scrollbar" id="context-bar"><div class="track"></div><div class="thumb" id="context-thumb"></div></div></body></html>
